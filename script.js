@@ -1,9 +1,24 @@
-const word = "cream";
-const wordArray = word.split('');
+let word = '';
+let wordArray = [];
+const WORD_URL = 'https://words.dev-apis.com/word-of-the-day';
 
 const allInputs = document.querySelectorAll('.input-row input');
 
-allInputs.forEach(sampleFn)
+async function getWord() {
+    const promise = await fetch(WORD_URL);
+    const processedPromise = await promise.json();
+    word = processedPromise.word;
+    wordArray = word.split('');
+    console.log(word); // to check if word is fetched correctly
+}
+
+getWord().then(() => {
+    const loadingElement = document.getElementById('loader');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+    allInputs.forEach(sampleFn);
+});
 
 function sampleFn(input) {
     input.addEventListener('keydown', function (e) {
@@ -11,7 +26,7 @@ function sampleFn(input) {
             e.preventDefault();
             return false;
         }
-    })
+    });
 
     input.addEventListener('keyup', function (e) {
         if (!e.code.startsWith('Key') && e.key !== 'Enter' && e.key !== 'Backspace') {
@@ -23,68 +38,49 @@ function sampleFn(input) {
         const inputIndex = inputsInParent.indexOf(input);
 
         if (inputIndex < 4) {
-            //console.log(inputsInParent);
             const nextInputIndex = inputIndex + 1;
             const nextInput = inputsInParent[nextInputIndex];
-            nextInput.focus();
-        } 
-        
-        else if (e.key === 'Enter') {
+            if (nextInput) {
+                nextInput.focus();
+            }
+        } else if (e.key === 'Enter') {
             let currentGuess = [];
 
             for (let i = 0; i < inputsInParent.length; i++) {
                 currentGuess.push(inputsInParent[i].value);
-
-                if (currentGuess.toString() === wordArray.toString()) {
-                    const input = inputsInParent[i];
-
-                    input.classList.add('correct');
-
-                    alert('You Win!');
-
-                    return;
-                }
-
-                //console.log(currentGuess);
-
-                if (currentGuess[i] === wordArray[i]) {
-                    const input = inputsInParent[i];
-
-                    input.classList.add('correct');
-                }
-
-                else if (wordArray.includes(currentGuess[i])) {
-                    const input = inputsInParent[i];
-
-                    input.classList.add('close');
-                }
-
-                else {
-                    const input = inputsInParent[i];
-
-                    input.classList.add('wrong');
-                }
             }
-            // moves to next line
-            const nextRow = parentElement.nextElementSibling;
 
+            if (currentGuess.join('') === wordArray.join('')) {
+                inputsInParent.forEach((input) => input.classList.add('correct'));
+                alert('You Win!');
+                return;
+            }
+
+            currentGuess.forEach((guessChar, i) => {
+                if (guessChar === wordArray[i]) {
+                    inputsInParent[i].classList.add('correct');
+                } else if (wordArray.includes(guessChar)) {
+                    inputsInParent[i].classList.add('close');
+                } else {
+                    inputsInParent[i].classList.add('wrong');
+                }
+            });
+
+            const nextRow = parentElement.nextElementSibling;
             if (nextRow) {
                 nextRow.children.item(0).focus();
-            } 
-            // i added this part
-            else {
-                alert(`game over the word was ${word}`);
-
-                return;
+            } else {
+                alert(`Game over. The word was ${word}`);
             }
         }
 
         if (e.key === 'Backspace') {
-            //console.log(`you pressed ${e.key}`);
             const lastIndex = inputIndex - 1;
-            const nextInput = inputsInParent[lastIndex];
-            nextInput.focus();
-            nextInput.value = ''
+            if (lastIndex >= 0) {
+                const nextInput = inputsInParent[lastIndex];
+                nextInput.focus();
+                nextInput.value = '';
+            }
         }
     });
 }
