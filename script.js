@@ -12,14 +12,6 @@ async function getWord() {
     console.log(word); // to check if word is fetched correctly
 }
 
-getWord().then(() => {
-    const loadingElement = document.getElementById('loader');
-        if (loadingElement) {
-            loadingElement.style.display = 'none';
-        }
-    allInputs.forEach(sampleFn);
-});
-
 function sampleFn(input) {
     input.addEventListener('keydown', function (e) {
         if (!e.code.startsWith('Key') && e.key !== 'Enter' && e.key !== 'Backspace') {
@@ -34,7 +26,9 @@ function sampleFn(input) {
         }
 
         const parentElement = input.parentElement;
+        //console.log(parentElement);
         const inputsInParent = Array.from(parentElement.children);
+        //console.log(inputsInParent);
         const inputIndex = inputsInParent.indexOf(input);
 
         if (inputIndex < 4) {
@@ -84,6 +78,14 @@ function sampleFn(input) {
         }
     });
 }
+
+getWord().then(() => {
+    const loadingElement = document.getElementById('loader');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+    allInputs.forEach(sampleFn);
+});
 
 //my first attempt 🥹
 /* window.addEventListener('keydown', function enterKey(e) {
