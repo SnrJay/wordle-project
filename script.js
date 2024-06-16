@@ -1,6 +1,9 @@
+const WORD_URL = 'https://words.dev-apis.com/word-of-the-day';
+const CHECK_WORD_URL = 'https://words.dev-apis.com/validate-word';
+
 let word = '';
 let wordArray = [];
-const WORD_URL = 'https://words.dev-apis.com/word-of-the-day';
+let isValidWord; 
 
 const allInputs = document.querySelectorAll('.input-row input');
 
@@ -11,6 +14,33 @@ async function getWord() {
     wordArray = word.split('');
     console.log(word); // to check if word is fetched correctly
 }
+
+async function checkWord(url = '', data = {}) {
+    // Convert the data object to a JSON string
+    const jsonData = JSON.stringify(data);
+  
+    // Define the options for the fetch request
+    const fetchOptions = {
+      method: 'POST', // HTTP method
+      headers: {
+        'Content-Type': 'application/json' // Specify the content type as JSON
+      },
+      body: jsonData // The data to send in the request body
+    };
+  
+    // Make the request using fetch and wait for the response
+    const response = await fetch(url, fetchOptions);
+  
+    // Check if the response status is OK (status code 200-299)
+    if (!response.ok) {
+      // If the response is not OK, throw an error with the status text
+      throw new Error('Network response was not ok ' + response.statusText);
+    }
+  
+    // Parse the JSON response
+    const responseData = await response.json();
+    isValidWord = responseData.validWord;
+  }
 
 function sampleFn(input) {
     input.addEventListener('keydown', function (e) {
@@ -38,11 +68,44 @@ function sampleFn(input) {
                 nextInput.focus();
             }
         } else if (e.key === 'Enter') {
+            const loadingElement = document.getElementById('loader');
+            loadingElement.style.visibility = 'visible';
+
             let currentGuess = [];
+            let data = {};
 
             for (let i = 0; i < inputsInParent.length; i++) {
                 currentGuess.push(inputsInParent[i].value);
             }
+
+            // the following code isn't great but it works
+            data.word = currentGuess.join('');
+            //console.log(data);
+
+            console.log(checkWord(CHECK_WORD_URL, data));
+
+            checkWord(CHECK_WORD_URL, data)
+            .then(() => {
+                const loadingElement = document.getElementById('loader');
+                if (loadingElement) {
+                    loadingElement.style.visibility = 'hidden';
+                }
+
+                if (!isValidWord) {
+                    currentGuess.forEach((guessChar, i) => {
+                        inputsInParent[i].classList.add('invalid');
+                    });
+                    setTimeout(() => {
+                        currentGuess.forEach((guessChar, i) => {
+                            inputsInParent[i].classList.remove('invalid', 'wrong', 'close', 'correct')
+                        })
+                    }, 1000);
+
+                    const nextInput = inputsInParent[inputIndex];
+                    nextInput.focus();
+                }
+            })
+            // end of embarrassment
 
             if (currentGuess.join('') === wordArray.join('')) {
                 inputsInParent.forEach((input) => input.classList.add('correct'));
@@ -82,7 +145,7 @@ function sampleFn(input) {
 getWord().then(() => {
     const loadingElement = document.getElementById('loader');
         if (loadingElement) {
-            loadingElement.style.display = 'none';
+            loadingElement.style.visibility = 'hidden';
         }
     allInputs.forEach(sampleFn);
 });
