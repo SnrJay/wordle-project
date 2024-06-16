@@ -104,31 +104,31 @@ function sampleFn(input) {
                     const nextInput = inputsInParent[inputIndex];
                     nextInput.focus();
                 }
-            })
-            // end of embarrassment
-
-            if (currentGuess.join('') === wordArray.join('')) {
-                inputsInParent.forEach((input) => input.classList.add('correct'));
-                alert('You Win!');
-                return;
-            }
-
-            currentGuess.forEach((guessChar, i) => {
-                if (guessChar === wordArray[i]) {
-                    inputsInParent[i].classList.add('correct');
-                } else if (wordArray.includes(guessChar)) {
-                    inputsInParent[i].classList.add('close');
-                } else {
-                    inputsInParent[i].classList.add('wrong');
+            }) // end of embarrassment
+            .then(() => {
+                if (currentGuess.join('') === wordArray.join('')) {
+                    inputsInParent.forEach((input) => input.classList.add('correct'));
+                    alert('You Win!');
+                    return;
                 }
+    
+                currentGuess.forEach((guessChar, i) => {
+                    if (guessChar === wordArray[i]) {
+                        inputsInParent[i].classList.add('correct');
+                    } else if (wordArray.includes(guessChar)) {
+                        inputsInParent[i].classList.add('close');
+                    } else {
+                        inputsInParent[i].classList.add('wrong');
+                    }
+                });
             });
 
             const nextRow = parentElement.nextElementSibling;
-            if (nextRow) {
-                nextRow.children.item(0).focus();
-            } else {
-                alert(`Game over. The word was ${word}`);
-            }
+                if (nextRow) {
+                    nextRow.children.item(0).focus();
+                } else {
+                    alert(`Game over. The word was ${word}`);
+                }
         }
 
         if (e.key === 'Backspace') {
