@@ -104,7 +104,7 @@ function sampleFn(input) {
                     const nextInput = inputsInParent[inputIndex];
                     nextInput.focus();
                 }
-            }) // end of embarrassment
+            }) // end of questionable decisions
             .then(() => {
                 if (currentGuess.join('') === wordArray.join('')) {
                     inputsInParent.forEach((input) => input.classList.add('correct'));
