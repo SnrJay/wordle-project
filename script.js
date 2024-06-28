@@ -1,9 +1,11 @@
-const WORD_URL = 'https://words.dev-apis.com/word-of-the-day';
+const WORD_URL = 'https://words.dev-apis.com/word-of-the-day?random=1'; // add ?random=1 to the end to get a new word each time you refresh
 const CHECK_WORD_URL = 'https://words.dev-apis.com/validate-word';
 
 let word = '';
 let wordArray = [];
-let isValidWord; 
+let isValidWord;
+let wordMap;
+let guessMap;
 
 const allInputs = document.querySelectorAll('.input-row input');
 
@@ -18,29 +20,61 @@ async function getWord() {
 async function checkWord(url = '', data = {}) {
     // Convert the data object to a JSON string
     const jsonData = JSON.stringify(data);
-  
+
     // Define the options for the fetch request
     const fetchOptions = {
-      method: 'POST', // HTTP method
-      headers: {
-        'Content-Type': 'application/json' // Specify the content type as JSON
-      },
-      body: jsonData // The data to send in the request body
+        method: 'POST', // HTTP method
+        headers: {
+            'Content-Type': 'application/json' // Specify the content type as JSON
+        },
+        body: jsonData // The data to send in the request body
     };
-  
+
     // Make the request using fetch and wait for the response
     const response = await fetch(url, fetchOptions);
-  
+
     // Check if the response status is OK (status code 200-299)
     if (!response.ok) {
-      // If the response is not OK, throw an error with the status text
-      throw new Error('Network response was not ok ' + response.statusText);
+        // If the response is not OK, throw an error with the status text
+        throw new Error('Network response was not ok ' + response.statusText);
     }
-  
+
     // Parse the JSON response
     const responseData = await response.json();
     isValidWord = responseData.validWord;
-  }
+}
+
+// tracking the number of characters in the the daily word
+function printans(ans) {
+    for (let [key, value] of ans) {
+        console.log(`${key}  occurs  ${value} times`);
+        wordMap = ans;
+        //console.log(ans);
+    }
+}
+
+function count(string, outp_map) {
+    for (let i = 0; i < string.length; i++) {
+        let k = outp_map.get(string[i]);
+        outp_map.set(string[i], k + 1);
+    }
+
+    printans(outp_map);
+}
+
+function countOccurence(test, callback) {
+    if (test.length === 0) {
+        console.log('empty string');
+        return false;
+    }
+    else {
+        let ans = new Map();
+        for (let i = 0; i < test.length; i++) {
+            ans.set(test[i], 0);
+        }
+        callback(test, ans); // i'll assume count(test, ans); does the same thing
+    }
+}
 
 function sampleFn(input) {
     input.addEventListener('keydown', function (e) {
@@ -85,50 +119,66 @@ function sampleFn(input) {
             console.log(checkWord(CHECK_WORD_URL, data));
 
             checkWord(CHECK_WORD_URL, data)
-            .then(() => {
-                const loadingElement = document.getElementById('loader');
-                if (loadingElement) {
-                    loadingElement.style.visibility = 'hidden';
-                }
-
-                if (!isValidWord) {
-                    currentGuess.forEach((guessChar, i) => {
-                        inputsInParent[i].classList.add('invalid');
-                    });
-                    setTimeout(() => {
-                        currentGuess.forEach((guessChar, i) => {
-                            inputsInParent[i].classList.remove('invalid', 'wrong', 'close', 'correct')
-                        })
-                    }, 1000);
-
-                    const nextInput = inputsInParent[inputIndex];
-                    nextInput.focus();
-                }
-            }) // end of questionable decisions
-            .then(() => {
-                if (currentGuess.join('') === wordArray.join('')) {
-                    inputsInParent.forEach((input) => input.classList.add('correct'));
-                    alert('You Win!');
-                    return;
-                }
-    
-                currentGuess.forEach((guessChar, i) => {
-                    if (guessChar === wordArray[i]) {
-                        inputsInParent[i].classList.add('correct');
-                    } else if (wordArray.includes(guessChar)) {
-                        inputsInParent[i].classList.add('close');
-                    } else {
-                        inputsInParent[i].classList.add('wrong');
+                .then(() => {
+                    const loadingElement = document.getElementById('loader');
+                    if (loadingElement) {
+                        loadingElement.style.visibility = 'hidden';
                     }
+
+                    if (!isValidWord) {
+                        currentGuess.forEach((guessChar, i) => {
+                            inputsInParent[i].classList.add('invalid');
+                        });
+                        setTimeout(() => {
+                            currentGuess.forEach((guessChar, i) => {
+                                inputsInParent[i].classList.remove('invalid', 'wrong', 'close', 'correct')
+                            })
+                        }, 1000);
+
+                        const nextInput = inputsInParent[inputIndex];
+                        nextInput.focus();
+                    }
+                }) // end of questionable decisions
+                .then(() => {
+                    if (currentGuess.join('') === wordArray.join('')) {
+                        inputsInParent.forEach((input) => input.classList.add('correct'));
+                        alert('You Win!');
+                        return;
+                    }
+
+                    countOccurence(word, count);
+                    //next step is to modify the map such that the character count drops after a condition is met (done)
+                    
+                    for (let i = 0; i < currentGuess.length; i++) {
+                        if(currentGuess[i] === wordArray[i]) {
+                            inputsInParent[i].classList.add('correct');
+
+                            let k = wordMap.get(word[i]);
+                            wordMap.set(currentGuess[i], k - 1);
+                        }
+                    }
+
+                    for (let i = 0; i < currentGuess.length; i++) {
+                        if (currentGuess[i] === wordArray[i]) {
+                            // do nothing
+                        } else if (wordArray.includes(currentGuess[i]) && wordMap.get(currentGuess[i]) > 0) {
+                            inputsInParent[i].classList.add('close');
+
+                            let k = wordMap.get(word[i]);
+                            wordMap.set(currentGuess[i], k - 1);
+                        } else {
+                            inputsInParent[i].classList.add('wrong');
+                        }
+                    }
+                    console.log(wordMap);
                 });
-            });
 
             const nextRow = parentElement.nextElementSibling;
-                if (nextRow) {
-                    nextRow.children.item(0).focus();
-                } else {
-                    alert(`Game over. The word was ${word}`);
-                }
+            if (nextRow) {
+                nextRow.children.item(0).focus();
+            } else {
+                alert(`Game over. The word was ${word}`);
+            }
         }
 
         if (e.key === 'Backspace') {
@@ -144,9 +194,9 @@ function sampleFn(input) {
 
 getWord().then(() => {
     const loadingElement = document.getElementById('loader');
-        if (loadingElement) {
-            loadingElement.style.visibility = 'hidden';
-        }
+    if (loadingElement) {
+        loadingElement.style.visibility = 'hidden';
+    }
     allInputs.forEach(sampleFn);
 });
 
