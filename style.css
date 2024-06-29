@@ -60,7 +60,7 @@ input {
     font-size: 28px;
     text-align: center;
     font-weight: 600;
-    /* caret-color: transparent; */
+    caret-color: transparent;
     text-transform: uppercase;
 }
 

@@ -1,4 +1,4 @@
-const WORD_URL = 'https://words.dev-apis.com/word-of-the-day?random=1'; // add ?random=1 to the end to get a new word each time you refresh
+const WORD_URL = 'https://words.dev-apis.com/word-of-the-day?'; // add ?random=1 to the end to get a new word each time you refresh
 const CHECK_WORD_URL = 'https://words.dev-apis.com/validate-word';
 
 let word = '';
